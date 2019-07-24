@@ -1,33 +1,41 @@
 <template>
-  <li @click="isFocused = true">
+  <div @click="handleClick">
     <input
       type="text"
-      :value="itemDescription"
-      v-if="isFocused"
+      :value="value"
+      v-show="isFocused"
+      ref="input"
+      placeholder="Write a task"
       @blur="isFocused = false"
-      @change="$emit('change', val)"
+      @change="$emit('input', $event.target.value)"
     />
-    <span v-else>
-      {{ itemDescription }}
+    <span v-show="!isFocused">
+      {{ value }}
     </span>
-  </li>
+  </div>
 </template>
 
 <script>
 export default {
-  name: "ProjectItem",
+  name: 'TextEditor',
   props: {
-    itemDescription: {
+    value: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      isFocused: false
+      isFocused: false,
     };
   },
-  computed: {}
+  computed: {},
+  methods: {
+    handleClick() {
+      this.isFocused = true;
+      this.$refs.input.focus();
+    },
+  },
 };
 </script>
 

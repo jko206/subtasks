@@ -1,54 +1,88 @@
 <template>
-  <div class="project-wrapper">
-    <div class="project-title">
-      {{ projectTitle }}
+  <div class="task-wrapper">
+    <div :class="['main-task', `depth-${depth}`]">
+      <input
+        ref="input"
+        :value="task.description"
+        @input="updateItem"
+        @keydown.enter.exact="addTask"
+        @keydown.tab.exact.prevent="indent"
+        @keydown.shift.tab.prevent="unindent"
+        :placeholder="id.substr(0, 10)"
+      />
     </div>
-    <div class="project-items">
-      <ul>
-        <ProjectItem
-          class="project-item"
-          v-for="item in projectItems"
-          :key="item.key"
-          :item-description="item.description"
-          @change="updateItem"
-        />
-
-        <li class="add-project-item" @click="addItem">
-          Add Item
-        </li>
-      </ul>
-    </div>
+    <TaskWrapper
+      v-for="childId in task.subTasksIds"
+      :id="childId"
+      :key="childId"
+      :depth="depth + 1"
+    />
   </div>
 </template>
 
 <script>
-import TextEditor from "./text-editor.vue";
-import uuid from "@/functions/uuid";
-
-const letters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`;
+import TextEditor from './text-editor.vue';
 
 export default {
-  name: "ProjectWrapper",
+  name: 'TaskWrapper',
   components: { TextEditor },
-  data() {
-    return {
-      projectTitle: "some title",
-      projectItems: []
-    };
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+    depth: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+  },
+  computed: {
+    task() {
+      return this.$store.state.tasksById[this.id];
+    },
+  },
+  mounted() {
+    if (this.task.isNew) {
+      this.$refs.input.focus();
+    }
+    delete this.task.isNew;
   },
   methods: {
-    addItem() {
-      this.projectItems.push({
-        description: "New Item",
-        key: uuid()
+    addTask() {
+      this.$store.dispatch('addTask', {
+        superTaskId: this.task.superTaskId,
+        prevTaskId: this.id,
       });
     },
-    updateItem(...args) {
-      console.log(args);
-    }
-  }
+    updateItem(event) {
+      const { id } = this;
+      this.$store.dispatch('editTask', {
+        id,
+        description: event.target.value,
+      });
+    },
+    indent() {
+      const { id, superTaskId, prevTaskId } = this.task;
+      this.$store.dispatch('makeSubTask', {
+        id,
+        superTaskId, // so as to remove from array
+        prevTaskId, // become this tasks's subtask
+      });
+    },
+    unindent() {
+      console.log('unindent');
+    },
+  },
 };
 </script>
 
 <style lang="scss" scoped>
+$paddingIncrement: 10px;
+
+@for $i from 1 through 10 {
+  .depth-#{$i} {
+    padding-left: $paddingIncrement * $i;
+  }
+}
 </style>

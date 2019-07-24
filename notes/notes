@@ -1,0 +1,19 @@
+taskmates: tasks that are subtasks of a common supertask
+
+features:
+  - title: title of the task. Often all that's needed (currently description)
+  - detail: things like links and whatnot make it MarkDown compatible
+  - repeated: every day the new task is generated with the given template. 
+    - the repeated schedule will be called `routine` and it can have its own analytics.
+  - customFields: 
+    - for things like tracking my running time or something
+
+
+If the task is last, and it has no content, then collapse
+
+Ops:
+- add as a next task to an existing task
+  - get sibling task's parent task
+- add as a prev task to an existing task
+- remove a task
+- edit task
