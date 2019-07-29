@@ -8,6 +8,32 @@
 import TaskWrapper from './components/task-wrapper.vue';
 import { mapState, mapActions } from 'vuex';
 
+function calculateProgress(deadline, user, role, customers) {
+  // for deadline, user, and role, determine [ completed, total ] time for a set of customers
+  return (
+    customers
+      // first, turn the list of customers into a list of relevant sections
+      .reduce(
+        (sections, customer) =>
+          isCustomerDueByDeadline(deadline, customer) &&
+          isCustomerRelevantToRole(user, role, customer)
+            ? sections.concat(
+                customer.checklistSections.filter(s => sectionRelevantToRole(role, s))
+              )
+            : sections,
+        []
+      )
+      // then sum the times of those sections
+      .reduce(
+        ([completed, total], section) => [
+          completed + (section.status === CLOSE_STATUSES.COMPLETE ? section.minutes : 0),
+          total + section.minutes,
+        ],
+        [0, 0]
+      )
+  );
+}
+
 export default {
   name: 'app',
   components: {
@@ -19,11 +45,9 @@ export default {
     };
   },
   created() {
-    const root = this.$store.state.root;
-    const rootId = root.id;
-    this.$store.dispatch('addTask', {
-      superTaskId: rootId,
-      isNew: true,
+    const rootTaskId = this.$store.state.root.id;
+    this.addTask({
+      superTaskId: rootTaskId,
     });
   },
   computed: {

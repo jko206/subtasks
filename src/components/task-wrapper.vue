@@ -1,18 +1,18 @@
 <template>
   <div class="task-wrapper">
-    <div :class="['main-task', `depth-${depth}`]">
+    <div :class="['main-task', `depth-${depth}`]" ref="input-wrapper">
       <input
-        ref="input"
         :value="task.description"
-        @input="updateItem"
-        @keydown.enter.exact="addTask"
-        @keydown.tab.exact.prevent="indent"
-        @keydown.shift.tab.prevent="unindent"
+        @change="updateItem"
+        @keydown.enter.exact="addTask('below')"
+        @keydown.meta.enter="addTask('above')"
+        @keydown.tab.exact.prevent="indent($event)"
+        @keydown.shift.tab.prevent="unindent($event)"
         :placeholder="id.substr(0, 10)"
       />
     </div>
     <TaskWrapper
-      v-for="childId in task.subTasksIds"
+      v-for="childId in task.subTaskIds"
       :id="childId"
       :key="childId"
       :depth="depth + 1"
@@ -22,6 +22,7 @@
 
 <script>
 import TextEditor from './text-editor.vue';
+import { setTimeout } from 'timers';
 
 export default {
   name: 'TaskWrapper',
@@ -43,16 +44,12 @@ export default {
     },
   },
   mounted() {
-    if (this.task.isNew) {
-      this.$refs.input.focus();
-    }
-    delete this.task.isNew;
+    this.$refs['input-wrapper'].querySelector('input').focus();
   },
   methods: {
-    addTask() {
+    addTask(position) {
       this.$store.dispatch('addTask', {
-        superTaskId: this.task.superTaskId,
-        prevTaskId: this.id,
+        [position === 'below' ? 'prevTaskId' : 'nextTaskId']: this.id,
       });
     },
     updateItem(event) {
@@ -62,16 +59,23 @@ export default {
         description: event.target.value,
       });
     },
-    indent() {
-      const { id, superTaskId, prevTaskId } = this.task;
-      this.$store.dispatch('makeSubTask', {
-        id,
-        superTaskId, // so as to remove from array
-        prevTaskId, // become this tasks's subtask
-      });
+    indent($event) {
+      const { id, prevTaskId } = this.task;
+      if (prevTaskId) {
+        this.$store.dispatch('makeSubTask', {
+          id,
+          superTaskId: prevTaskId,
+        });
+      }
     },
-    unindent() {
-      console.log('unindent');
+    unindent($event) {
+      const { id, superTaskId } = this.task;
+      if (superTaskId !== this.$store.state.rootId) {
+        this.$store.dispatch('makeNextTask', {
+          id,
+          prevTaskId: superTaskId,
+        });
+      }
     },
   },
 };

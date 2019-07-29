@@ -6,24 +6,39 @@ Array.prototype.last = function() {
   return this[this.length - 1];
 };
 
-const emptyTask = {
-  id: null,
-  isProject: false,
-  isNew: true,
-  hasOwnBoard: false,
-  superTaskId: null,
-  subTaskIds: [],
-  prevTaskId: null,
-  nextTaskId: null,
-  description: '',
-  progress: 0,
-  showSubtasks: false,
+Array.prototype.remove = function(elem) {
+  const i = this.indexOf(elem);
+  this.splice(i, 1);
 };
 
+Array.prototype.insertAfter = function(aboutElem, newElem) {
+  const idx = this.indexOf(aboutElem);
+  this.splice(idx + 1, 0, newElem);
+};
+
+Array.prototype.insertBefore = function(aboutElem, newElem) {
+  const idx = this.indexOf(aboutElem);
+  this.splice(idx, 0, newElem);
+};
+
+function getEmptyTask(seed) {
+  return {
+    id: uuid(),
+    isProject: false,
+    hasOwnBoard: false,
+    superTaskId: null,
+    subTaskIds: [],
+    prevTaskId: null,
+    nextTaskId: null,
+    description: '',
+    progress: 0,
+    showSubtasks: false,
+    ...seed,
+  };
+}
+
 const root = {
-  ...emptyTask,
-  id: uuid(),
-  showSubtasks: true,
+  ...getEmptyTask({ showSubtasks: true }),
 };
 
 Vue.use(Vuex);
@@ -34,54 +49,101 @@ export default new Vuex.Store({
     tasksById: {
       [root.id]: root,
     },
+    detachedTask: null,
+    rootId: root.id,
   },
-  actions: {
-    // Things that can be added: Project, task
-    // Things can be either
-    addTask({ state }, newTask) {
-      const { superTaskId, prevTaskId, description } = newTask;
-      const id = uuid();
-      const task = {
-        ...emptyTask,
-        superTaskId,
-        prevTaskId,
-        description,
-        id,
-      };
+  mutations: {
+    createTask(state, description) {
+      const task = getEmptyTask({ description });
+      state.tasksById[task.id] = task;
+      state.detachedTask = task;
+    },
 
-      state.tasksById[id] = task;
+    detachTask(state, id) {
+      const task = state.tasksById[id];
 
-      // link super and sub tasks
+      // get the neighbors
+      const { nextTaskId, prevTaskId, superTaskId } = task;
+      const nextTask = state.tasksById[nextTaskId] || null;
+      const prevTask = state.tasksById[prevTaskId] || null;
+      const superTask = state.tasksById[superTaskId] || null;
+
+      // connect the neighbors
+      if (nextTask) nextTask.prevTaskId = task.prevTaskId;
+      if (prevTask) prevTask.nextTaskId = task.nextTaskId;
+      if (superTask) superTask.subTaskIds.remove(id);
+
+      task.superTaskId = null;
+      task.prevTaskId = null;
+      task.nextTaskId = null;
+
+      state.detachedTask = task;
+    },
+    // put the detached task before some task
+    makePrevTask(state, nextTaskId) {
+      const task = state.detachedTask;
+      const nextTask = state.tasksById[nextTaskId];
+      const superTask = state.tasksById[nextTask.superTaskId];
+
+      if (nextTask.prevTaskId) {
+        const prevTask = state.tasksById[nextTask.prevTaskId];
+        prevTask.nextTaskId = task.id;
+        task.prevTaskId = prevTask.id;
+      }
+
+      nextTask.prevTaskId = task.id;
+      task.nextTaskId = nextTaskId;
+
+      superTask.subTaskIds.insertBefore(nextTaskId, task.id);
+      task.superTaskId = nextTask.superTaskId;
+
+      state.detachedTask = null;
+    },
+    // put the detached task after some task
+    makeNextTask(state, prevTaskId) {
+      const task = state.detachedTask;
+      const prevTask = state.tasksById[prevTaskId];
+      const superTask = state.tasksById[prevTask.superTaskId];
+      const nextTask = state.tasksById[prevTask.nextTaskId];
+
+      prevTask.nextTaskId = task.id;
+      task.prevTaskId = prevTaskId;
+
+      if (nextTask) {
+        nextTask.prevTaskId = task.id;
+        task.nextTaskId = nextTask.id;
+      }
+
+      superTask.subTaskIds.insertAfter(prevTaskId, task.id);
+      task.superTaskId = prevTask.superTaskId;
+
+      state.detachedTask = null;
+    },
+    makeFirstSubTask(state, superTaskId) {
+      const task = state.detachedTask;
       const superTask = state.tasksById[superTaskId];
 
-      if (prevTaskId) {
-        // when inserted in the subTasks array where i > 0
-        const prevTask = state.tasksById[prevTaskId];
-        const { nextTaskId } = prevTask;
-        prevTask.nextTaskId = task.id;
-        task.prevTask = prevTask;
-        if (nextTaskId) {
-          const nextTask = state.tasksById[nextTaskId];
-          task.nextTask = nextTaskId;
-          nextTask.prevTask = task;
-        }
+      task.superTaskId = superTaskId;
+      superTask.subTaskIds.push(task.id);
 
-        // insert into the array.
-        const prevTaskIdIdx = superTask.subTaskIds.indexOf(prevTaskId);
-        superTask.subTaskIds.splice(prevTaskIdIdx + 1, 0, task.id);
-      } else {
-        if (superTask.subTaskIds.length) {
-          const currentFirstSubTask = superTask.subTaskIds[0];
-          currentFirstSubTask.prevTaskId = task.id;
-          task.nextTaskId = currentFirstSubTask.id;
-        }
-
-        superTask.subTaskIds.unshift(task.id);
-      }
+      state.detachedTask = null;
     },
-    editTask({ state }, { id, description }) {
+    editTask(state, { id, description }) {
+      state.tasksById[id].description = description;
+    },
+  },
+  actions: {
+    addTask({ commit }, { prevTaskId, nextTaskId, superTaskId, description }) {
+      commit('createTask', description);
+      if (prevTaskId) commit('makeNextTask', prevTaskId);
+      else if (nextTaskId) commit('makePrevTask', nextTaskId);
+      else if (superTaskId) commit('makeFirstSubTask', superTaskId);
+
+      commit('save');
+    },
+    editTask({ commit }, { id, description }) {
       if (description) {
-        state.tasksById[id].description = description;
+        commit('editTask', { id, description });
       }
     },
     removeTask({ state }, { id }) {
@@ -105,22 +167,22 @@ export default new Vuex.Store({
       delete state.tasksById[id];
     },
     reorderTask() {}, // moves tasks up/down
-    makeSubTask({ state }, { id, superTaskId, prevTaskId }) {
-      const task = state.tasksById[id];
+
+    // becomes a subtask of its previous task
+    makeSubTask({ state, commit }, { id, superTaskId }) {
+      commit('detachTask', id);
       const superTask = state.tasksById[superTaskId];
-      const idx = superTask.subTaskIds.indexOf(id);
-      superTask.subTaskIds.splice(idx, 1);
-      task.superTaskId = prevTaskId;
-
-      const prevTask = state.tasksById[prevTaskId];
-      prevTask.nextTaskId = task.nextTaskId;
-      task.nextTaskId = prevTask.subTaskIds[0];
-
-      const currentFirstSubTaskId = prevTask.subTaskIds[0];
-      const currentFirstSubTask = state.tasksById[currentFirstSubTaskId];
-      currentFirstSubTask.prevTaskId = id;
-    }, // becomes a subtask of its previous task
-    makeSuperTask() {}, // becomes a nextTask of the superTask,
+      if (superTask.subTaskIds.length) {
+        const prevTaskId = superTask.subTaskIds.last();
+        commit('makeNextTask', prevTaskId);
+      } else {
+        commit('makeFirstSubTask', superTaskId);
+      }
+    },
+    makeNextTask({ commit }, { id, prevTaskId }) {
+      commit('detachTask', id);
+      commit('makeNextTask', prevTaskId);
+    },
     makeProject() {},
     getOwnBoard() {},
   },
