@@ -38,7 +38,7 @@ function getEmptyTask(seed) {
 }
 
 const root = {
-  ...getEmptyTask({ showSubtasks: true }),
+  ...getEmptyTask({ showSubtasks: true, isRoot: true }),
 };
 
 Vue.use(Vuex);
@@ -51,6 +51,7 @@ export default new Vuex.Store({
     },
     detachedTask: null,
     rootId: root.id,
+    focusedTaskId: null,
   },
   mutations: {
     createTask(state, description) {
@@ -128,8 +129,12 @@ export default new Vuex.Store({
 
       state.detachedTask = null;
     },
-    editTask(state, { id, description }) {
-      state.tasksById[id].description = description;
+    editTask(state, { id, description, progress }) {
+      if (description) state.tasksById[id].description = description;
+      if (progress !== undefined) state.tasksById[id].progress = progress;
+    },
+    focusTask(state, id) {
+      state.focusedTaskId = id;
     },
   },
   actions: {
@@ -139,11 +144,15 @@ export default new Vuex.Store({
       else if (nextTaskId) commit('makePrevTask', nextTaskId);
       else if (superTaskId) commit('makeFirstSubTask', superTaskId);
 
-      commit('save');
+      // commit('save');
     },
-    editTask({ commit }, { id, description }) {
+    editTask({ commit }, { id, description, progress }) {
       if (description) {
         commit('editTask', { id, description });
+      }
+
+      if (progress !== undefined) {
+        commit('editTask', { id, progress });
       }
     },
     removeTask({ state }, { id }) {
