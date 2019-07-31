@@ -45,12 +45,11 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    root,
+    rootId: root.id,
     tasksById: {
       [root.id]: root,
     },
     detachedTask: null,
-    rootId: root.id,
     focusedTaskId: null,
   },
   mutations: {
@@ -130,52 +129,70 @@ export default new Vuex.Store({
       state.detachedTask = null;
     },
     editTask(state, { id, description, progress }) {
-      if (description) state.tasksById[id].description = description;
+      if (description !== undefined) state.tasksById[id].description = description;
       if (progress !== undefined) state.tasksById[id].progress = progress;
     },
     focusTask(state, id) {
       state.focusedTaskId = id;
     },
+    purgeTask(state, id) {
+      state.detachedTask = null;
+      delete state.tasksById[id];
+    },
+    loadSavedTasks(state, { rootId, tasksById }) {
+      state.rootId = rootId;
+      state.tasksById = JSON.parse(tasksById);
+    },
+    saveTasks({ rootId, tasksById }) {
+      window.localStorage.setItem('rootId', rootId);
+      window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
+    },
   },
   actions: {
+    initialize({ state, dispatch, commit }) {
+      const savedRootId = window.localStorage.getItem('rootId');
+      const savedTasksById = window.localStorage.getItem('tasksById');
+      if (savedRootId && savedTasksById) {
+        commit('loadSavedTasks', {
+          rootId: savedRootId,
+          tasksById: savedTasksById,
+        });
+      } else {
+        const { rootId } = state;
+        dispatch('addTask', { superTaskId: rootId });
+      }
+    },
     addTask({ commit }, { prevTaskId, nextTaskId, superTaskId, description }) {
       commit('createTask', description);
       if (prevTaskId) commit('makeNextTask', prevTaskId);
       else if (nextTaskId) commit('makePrevTask', nextTaskId);
       else if (superTaskId) commit('makeFirstSubTask', superTaskId);
 
-      // commit('save');
+      commit('saveTasks');
     },
     editTask({ commit }, { id, description, progress }) {
-      if (description) {
+      if (description !== undefined) {
         commit('editTask', { id, description });
       }
 
       if (progress !== undefined) {
         commit('editTask', { id, progress });
       }
+
+      commit('saveTasks');
     },
-    removeTask({ state }, { id }) {
-      const task = state.tasksById[id];
-      const { superTask, prevTask, nextTask } = task;
-
-      // disconnect from superTask
-      const arrayToBeRemovedFrom = (superTask && superTask.subTasks) || state.rootTasks;
-      const taskIdx = arrayToBeRemovedFrom.indexOf(task);
-      arrayToBeRemovedFrom.splice(taskIdx, 1);
-
-      // disconnect from taskmates
-      if (prevTask && nextTask) {
-        prevTask.nextTask = nextTask;
-        nextTask.prevTask = prevTask;
-      } else {
-        if (prevTask) prevTask.nextTask = null;
-        if (nextTask) nextTask.prevTask = null;
+    removeTask({ commit, state }, id) {
+      const { tasksById, rootId } = state;
+      const task = tasksById[id];
+      const { prevTaskId, nextTaskId, superTaskId } = task;
+      const isOnlyTask = !prevTaskId && !nextTaskId && superTaskId === rootId;
+      if (!isOnlyTask) {
+        commit('detachTask', id);
+        commit('purgeTask', id);
       }
 
-      delete state.tasksById[id];
+      commit('saveTasks');
     },
-    reorderTask() {}, // moves tasks up/down
 
     // becomes a subtask of its previous task
     makeSubTask({ state, commit }, { id, superTaskId }) {
@@ -187,10 +204,14 @@ export default new Vuex.Store({
       } else {
         commit('makeFirstSubTask', superTaskId);
       }
+
+      commit('saveTasks');
     },
     makeNextTask({ commit }, { id, prevTaskId }) {
       commit('detachTask', id);
       commit('makeNextTask', prevTaskId);
+
+      commit('saveTasks');
     },
     makeProject() {},
     getOwnBoard() {},

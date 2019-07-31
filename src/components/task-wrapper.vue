@@ -9,9 +9,10 @@
         @keydown.meta.enter="addTask('above')"
         @keydown.tab.exact.prevent="indent($event)"
         @keydown.shift.tab.prevent="unindent($event)"
-        :placeholder="id.substr(0, 10)"
+        placeholder="Empty task"
         @keydown.up.exact="focusPrevTask"
         @keydown.down.exact="focusNextTask"
+        @keydown.delete.exact="deleteTask"
       />
     </div>
     <TaskWrapper
@@ -77,13 +78,13 @@ export default {
     },
     updateItem(event) {
       const { id } = this;
+      console.log(event.target.value);
       this.$store.dispatch('editTask', {
         id,
         description: event.target.value,
       });
     },
     updateProgress(progress) {
-      console.log('here in the parent', progress);
       const { id } = this;
       this.$store.dispatch('editTask', {
         id,
@@ -113,17 +114,25 @@ export default {
       const { tasksById } = this.$store.state;
 
       const toFocusId = (prevTaskId && getLastDescendant(prevTaskId, tasksById)) || superTaskId;
-      console.log(toFocusId);
       this.$store.commit('focusTask', toFocusId);
     },
     focusNextTask() {
       const { tasksById } = this.$store.state;
       const toFocusId = this.task.subTaskIds[0] || getClosestNextTask(this.id, tasksById);
-      console.log(toFocusId);
       this.$store.commit('focusTask', toFocusId);
     },
     focusInput() {
       this.$refs['input-wrapper'].querySelector('input').focus();
+    },
+    deleteTask() {
+      if (this.task.description) return;
+      let confirmDelete = true;
+      if (this.task.subTaskIds.length) {
+        confirmDelete = confirm('SubTasks will be deleted.');
+      }
+      if (confirmDelete) {
+        this.$store.dispatch('removeTask', this.id);
+      }
     },
   },
 };
@@ -140,5 +149,25 @@ $paddingIncrement: 10px;
 
 .task-wrapper {
   line-height: 1.5;
+}
+
+.main-task {
+  display: flex;
+  height: 35px;
+  margin: 5px;
+  align-items: center;
+}
+
+.main-task input {
+  margin: 0;
+  margin-left: 5px;
+  width: 200px;
+  border: 0;
+  font-size: 1.125rem;
+  outline: none;
+}
+
+input:focus {
+  border-bottom: 1px solid gray;
 }
 </style>

@@ -45,14 +45,13 @@ export default {
     };
   },
   created() {
-    const rootTaskId = this.$store.state.root.id;
-    this.addTask({
-      superTaskId: rootTaskId,
-    });
+    this.$store.dispatch('initialize');
   },
   computed: {
     taskIds() {
-      return this.$store.state.root.subTaskIds;
+      const { rootId, tasksById } = this.$store.state;
+      const root = tasksById[rootId];
+      return root.subTaskIds;
     },
   },
   methods: {
