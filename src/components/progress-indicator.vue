@@ -1,5 +1,5 @@
 <template>
-  <div class="progress-indicator" @click="progressUp">
+  <div class="progress-indicator">
     <div class="checkmark" :style="borderColor" />
   </div>
 </template>
@@ -14,15 +14,10 @@ export default {
       validator: n => n >= 0 && n <= 1,
     },
   },
-  methods: {
-    progressUp() {
-      const progress = this.value === 0 ? 0.5 : this.value === 0.5 ? 1 : 0;
-      this.$emit('input', progress);
-    },
-  },
   computed: {
     borderColor() {
-      const borderColor = this.value === 0 ? 'gray' : this.value === 0.5 ? 'orange' : 'green';
+      const borderColor = this.value === 1 ? 'green' : 
+        this.value === 0 ? 'gray' : 'orange';
       return { borderColor };
     },
   },

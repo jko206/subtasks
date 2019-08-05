@@ -1,7 +1,7 @@
 <template>
-  <div class="task-wrapper">
+  <div class="task-wrapper" v-if="isShown">
     <div :class="['main-task', `depth-${depth}`]" ref="input-wrapper">
-      <ProgressIndicator :value="task.progress" @input="updateProgress" />
+      <ProgressIndicator :value="task.progress" @click.native="updateProgress" />
       <input
         :value="task.description"
         @change="updateItem"
@@ -9,7 +9,7 @@
         @keydown.meta.enter="addTask('above')"
         @keydown.tab.exact.prevent="indent($event)"
         @keydown.shift.tab.prevent="unindent($event)"
-        placeholder="Empty task"
+        placeholder="Write a task"
         @keydown.up.exact="focusPrevTask"
         @keydown.down.exact="focusNextTask"
         @keydown.delete.exact="deleteTask"
@@ -25,8 +25,8 @@
 </template>
 
 <script>
-import TextEditor from './text-editor.vue';
 import ProgressIndicator from './progress-indicator.vue';
+import { mapState } from 'vuex';
 
 function getLastDescendant(taskId, tasksById) {
   // console.log(subTaskIds, superTaskId, tasksById);
@@ -42,7 +42,7 @@ function getClosestNextTask(taskId, tasksById) {
 
 export default {
   name: 'TaskWrapper',
-  components: { TextEditor, ProgressIndicator },
+  components: { ProgressIndicator },
   props: {
     id: {
       type: String,
@@ -55,17 +55,43 @@ export default {
     },
   },
   computed: {
+    ...mapState('filters', [
+      'showOnlyLeafSubTasks',
+      'showInProgressTasks',
+      'showCompletedTasks',
+      'showNotStartedTasks',
+    ]),
     task() {
       return this.$store.state.tasksById[this.id];
     },
+    progressEnum() {
+      const { progress } = this.task;
+      return progress === 0 ? 'not_started' : progress === 1 ? 'completed' : 'in_progress';
+    },
     isFocused() {
       return this.$store.state.focusedTaskId === this.id;
+    },
+    isLeafSubTask() {
+      return !this.task.subTaskIds.length;
+    },
+    isShown() {
+      const progress = this.progressEnum;
+      return (
+        !this.isLeafSubTask ||
+        ((this.showNotStartedTasks && progress === 'not_started') ||
+          (this.showCompletedTasks && progress === 'completed') ||
+          (this.showInProgressTasks && progress === 'in_progress'))
+      );
     },
   },
   watch: {
     isFocused() {
       if (this.isFocused) this.focusInput();
     },
+  },
+  created() {
+    const { progress, superTaskId } = this.task;
+    // this.$store.dispatch('updateTaskProgress', superTaskId);
   },
   mounted() {
     this.focusInput();
@@ -84,12 +110,21 @@ export default {
         description: event.target.value,
       });
     },
-    updateProgress(progress) {
+    updateProgress() {
       const { id } = this;
-      this.$store.dispatch('editTask', {
-        id,
-        progress,
-      });
+      const { progress, superTaskId } = this.task;
+      const newProgress = progress < 1 ? 1 : 0;
+      if (this.task.subTaskIds.length) {
+        this.$store.dispatch('markSubTasksAsDone', {
+          id,
+          progress: newProgress,
+        });
+      } else {
+        const { progress } = this.task;
+        this.task.progress = progress === 1 ? 0 : progress === 0 ? 0.5 : 1;
+      }
+      this.$store.dispatch('updateSuperTaskProgress', superTaskId);
+      this.$store.commit('saveTasks');
     },
     indent($event) {
       const { id, prevTaskId } = this.task;

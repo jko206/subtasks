@@ -1,25 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import uuid from '@/functions/uuid';
-
-Array.prototype.last = function() {
-  return this[this.length - 1];
-};
-
-Array.prototype.remove = function(elem) {
-  const i = this.indexOf(elem);
-  this.splice(i, 1);
-};
-
-Array.prototype.insertAfter = function(aboutElem, newElem) {
-  const idx = this.indexOf(aboutElem);
-  this.splice(idx + 1, 0, newElem);
-};
-
-Array.prototype.insertBefore = function(aboutElem, newElem) {
-  const idx = this.indexOf(aboutElem);
-  this.splice(idx, 0, newElem);
-};
+import filters from './modules/filters';
+import '@/functions/array';
 
 function getEmptyTask(seed) {
   return {
@@ -44,6 +27,9 @@ const root = {
 Vue.use(Vuex);
 
 export default new Vuex.Store({
+  modules: {
+    filters,
+  },
   state: {
     rootId: root.id,
     tasksById: {
@@ -147,6 +133,9 @@ export default new Vuex.Store({
       window.localStorage.setItem('rootId', rootId);
       window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
     },
+    updateTaskProgress(state, { id, progress }) {
+      state.tasksById[id].progress = progress;
+    },
   },
   actions: {
     initialize({ state, dispatch, commit }) {
@@ -212,6 +201,32 @@ export default new Vuex.Store({
       commit('makeNextTask', prevTaskId);
 
       commit('saveTasks');
+    },
+    markSubTasksAsDone({ commit, state }, { id, progress }) {
+      const queue = [id];
+      while (queue.length) {
+        const taskId = queue.shift();
+        const task = state.tasksById[taskId];
+
+        commit('updateTaskProgress', {
+          id: taskId,
+          progress,
+        });
+
+        if (task.subTaskIds.length) queue.push(...task.subTaskIds);
+      }
+    },
+    updateSuperTaskProgress({ state, commit, dispatch }, id) {
+      const { subTaskIds, superTaskId } = state.tasksById[id];
+      const total = subTaskIds.length;
+      let progress = subTaskIds
+        .map(subTaskId => state.tasksById[subTaskId])
+        .reduce((subTotal, task) => subTotal + task.progress, 0);
+
+      progress /= total;
+      commit('updateTaskProgress', { id, progress });
+
+      if (superTaskId) dispatch('updateSuperTaskProgress', superTaskId);
     },
     makeProject() {},
     getOwnBoard() {},
