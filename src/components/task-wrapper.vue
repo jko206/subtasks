@@ -1,6 +1,12 @@
 <template>
-  <div class="task-wrapper" v-if="isShown">
+  <div :class="('task-wrapper', { leaf: isLeafSubTask })" v-if="isShown">
     <div :class="['main-task', `depth-${depth}`]" ref="input-wrapper">
+      <FoldToggle
+        v-if="!isLeafSubTask"
+        :show="showSubTasks"
+        class="fold-toggle"
+        @click.native="showSubTasks = !showSubTasks"
+      />
       <ProgressIndicator :value="task.progress" @click.native="updateProgress" />
       <input
         :value="task.description"
@@ -15,17 +21,20 @@
         @keydown.delete.exact="deleteTask"
       />
     </div>
-    <TaskWrapper
-      v-for="childId in task.subTaskIds"
-      :id="childId"
-      :key="childId"
-      :depth="depth + 1"
-    />
+    <div class="sub-tasks" v-if="showSubTasks">
+      <TaskWrapper
+        v-for="childId in task.subTaskIds"
+        :id="childId"
+        :key="childId"
+        :depth="depth + 1"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import ProgressIndicator from './progress-indicator.vue';
+import FoldToggle from './fold-toggle.vue';
 import { mapState } from 'vuex';
 
 function getLastDescendant(taskId, tasksById) {
@@ -42,7 +51,7 @@ function getClosestNextTask(taskId, tasksById) {
 
 export default {
   name: 'TaskWrapper',
-  components: { ProgressIndicator },
+  components: { ProgressIndicator, FoldToggle },
   props: {
     id: {
       type: String,
@@ -53,6 +62,11 @@ export default {
       required: false,
       default: 0,
     },
+  },
+  data() {
+    return {
+      showSubTasks: true,
+    };
   },
   computed: {
     ...mapState('filters', [
@@ -174,16 +188,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$paddingIncrement: 10px;
+$indentation: 20px;
 
 @for $i from 1 through 10 {
   .depth-#{$i} {
-    padding-left: $paddingIncrement * $i;
+    padding-left: $indentation * $i;
+    .leaf & {
+      padding-left: $indentation * ($i + 1);
+    }
   }
 }
 
 .task-wrapper {
   line-height: 1.5;
+  align-items: center;
+}
+
+.sub-tasks {
 }
 
 .main-task {
@@ -191,6 +212,10 @@ $paddingIncrement: 10px;
   height: 35px;
   margin: 5px;
   align-items: center;
+}
+
+.fold-toggle {
+  margin-right: 10px;
 }
 
 .main-task input {
