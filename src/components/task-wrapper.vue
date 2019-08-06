@@ -103,10 +103,6 @@ export default {
       if (this.isFocused) this.focusInput();
     },
   },
-  created() {
-    const { progress, superTaskId } = this.task;
-    // this.$store.dispatch('updateTaskProgress', superTaskId);
-  },
   mounted() {
     this.focusInput();
   },
@@ -118,7 +114,6 @@ export default {
     },
     updateItem(event) {
       const { id } = this;
-      console.log(event.target.value);
       this.$store.dispatch('editTask', {
         id,
         description: event.target.value,
@@ -140,7 +135,7 @@ export default {
       this.$store.dispatch('updateSuperTaskProgress', superTaskId);
       this.$store.commit('saveTasks');
     },
-    indent($event) {
+    indent() {
       const { id, prevTaskId } = this.task;
       if (prevTaskId) {
         this.$store.dispatch('makeSubTask', {
@@ -149,7 +144,7 @@ export default {
         });
       }
     },
-    unindent($event) {
+    unindent() {
       const { id, superTaskId } = this.task;
       if (superTaskId !== this.$store.state.rootId) {
         this.$store.dispatch('makeNextTask', {

@@ -1,5 +1,4 @@
 const chars = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`;
-let count = 0;
 export default () => {
   let str = '';
   let count = 20;
