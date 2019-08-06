@@ -1,6 +1,6 @@
 <template>
   <div class="progress-indicator">
-    <div class="checkmark" :style="borderColor" />
+    <div :class="['checkmark', borderColorClass]" />
   </div>
 </template>
 
@@ -15,10 +15,9 @@ export default {
     },
   },
   computed: {
-    borderColor() {
-      const borderColor = this.value === 1 ? 'green' : 
-        this.value === 0 ? 'gray' : 'orange';
-      return { borderColor };
+    borderColorClass() {
+      const borderColor = this.value === 1 ? 'green' : this.value === 0 ? 'gray' : 'orange';
+      return `${borderColor}-checkmark`;
     },
   },
 };
@@ -44,5 +43,17 @@ export default {
   border-right: 0;
   position: relative;
   bottom: 2px;
+}
+
+.green-checkmark {
+  border-color: green;
+}
+
+.orange-checkmark {
+  border-color: orange;
+}
+
+.gray-checkmark {
+  border-color: gray;
 }
 </style>
