@@ -4,6 +4,8 @@ import uuid from '@/functions/uuid';
 import filters from './modules/filters';
 import '@/functions/array';
 
+('testing');
+
 function getEmptyTask(seed) {
   return {
     id: uuid(),
