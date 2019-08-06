@@ -37,7 +37,7 @@ $top-border: $triangle-height solid gray;
 .triangle-container {
   width: $triangle-width;
   height: $triangle-height;
-  transition: transform 0.25s ease-in;
+  // transition: transform 0.25s ease-in;
 
   &.point-right {
     transform: rotate(-90deg);

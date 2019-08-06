@@ -199,9 +199,6 @@ $indentation: 20px;
   align-items: center;
 }
 
-.sub-tasks {
-}
-
 .main-task {
   display: flex;
   height: 35px;
