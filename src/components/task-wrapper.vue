@@ -80,7 +80,7 @@ export default {
     },
     progressEnum() {
       const { progress } = this.task;
-      return progress === 0 ? 'not_started' : progress === 1 ? 'completed' : 'in_progress';
+      return ['not_started', 'completed'][progress] || 'in-progress';
     },
     isFocused() {
       return this.$store.state.focusedTaskId === this.id;
