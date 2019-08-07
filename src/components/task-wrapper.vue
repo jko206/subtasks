@@ -1,8 +1,8 @@
 <template>
-  <div :class="('task-wrapper', { leaf: isLeafSubTask })" v-if="isShown">
+  <div :class="('task-wrapper', { leaf: isAtomic })" v-if="isShown">
     <div :class="['main-task', `depth-${depth}`]" ref="input-wrapper">
       <FoldToggle
-        v-if="!isLeafSubTask"
+        v-if="!isAtomic"
         :show="showSubTasks"
         class="fold-toggle"
         @click.native="showSubTasks = !showSubTasks"
@@ -75,23 +75,24 @@ export default {
       'showCompletedTasks',
       'showNotStartedTasks',
     ]),
+    ...mapState(['tasksById', 'focusedTaskId']),
     task() {
-      return this.$store.state.tasksById[this.id];
+      return this.tasksById[this.id];
     },
     progressEnum() {
       const { progress } = this.task;
       return ['not_started', 'completed'][progress] || 'in-progress';
     },
     isFocused() {
-      return this.$store.state.focusedTaskId === this.id;
+      return this.focusedTaskId === this.id;
     },
-    isLeafSubTask() {
+    isAtomic() {
       return !this.task.subTaskIds.length;
     },
     isShown() {
       const progress = this.progressEnum;
       return (
-        !this.isLeafSubTask ||
+        !this.isAtomic ||
         ((this.showNotStartedTasks && progress === 'not_started') ||
           (this.showCompletedTasks && progress === 'completed') ||
           (this.showInProgressTasks && progress === 'in_progress'))
