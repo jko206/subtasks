@@ -70,7 +70,7 @@ export default {
 <style lang="scss" scoped>
 .filters {
   position: absolute;
-  top: 20px;
+  top: 80px;
   right: 20px;
   width: 200px;
   display: grid;

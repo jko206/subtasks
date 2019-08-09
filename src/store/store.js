@@ -1,24 +1,47 @@
 import '@/functions/array';
 import { getEmptyTask } from '@/functions/tasks';
 
-const root = {
-  ...getEmptyTask({ showSubtasks: true, isRoot: true }),
-};
-
 export default {
   state: {
-    rootId: root.id,
-    tasksById: {
-      [root.id]: root,
-    },
+    workspaceIds: [], // IDs of workspaces
+    tasksById: {},
     detachedTask: null,
     focusedTaskId: null,
+    currentWorkspaceId: null,
   },
   mutations: {
+    createWorkspace(state) {
+      const task = getEmptyTask();
+      state.tasksById[task.id] = task;
+      state.workspaceIds.push(task.id);
+    },
+    createFirstWorkspaceTask(state) {
+      const task = getEmptyTask();
+      state.tasksById[task.id] = task;
+
+      const lastAddedWorkspaceId = state.workspaceIds.last();
+      const lastAddedWorkspace = state.tasksById[lastAddedWorkspaceId];
+      lastAddedWorkspace.subTaskIds.push(task.id);
+
+      task.superTaskId = lastAddedWorkspaceId;
+    },
     createTask(state, description) {
       const task = getEmptyTask({ description });
       state.tasksById[task.id] = task;
       state.detachedTask = task;
+    },
+
+    setCurrentWorkspaceId(state, id) {
+      state.currentWorkspaceId = id;
+    },
+
+    saveWorkspaces(state) {
+      // window.localStorage.setItem('workspaceIds', JSON.stringify(state.workspaceIds));
+      // window.localStorage.setItem('currentWorkspaceId', JSON.stringify(state.currentWorkspaceId));
+    },
+
+    updateTask(state, { id, prop, value }) {
+      state.tasksById[id][prop] = value;
     },
 
     detachTask(state, id) {
@@ -106,26 +129,32 @@ export default {
       state.tasksById = JSON.parse(tasksById);
     },
     saveTasks({ rootId, tasksById }) {
-      window.localStorage.setItem('rootId', rootId);
-      window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
+      // window.localStorage.setItem('rootId', rootId);
+      // window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
     },
     updateTaskProgress(state, { id, progress }) {
       state.tasksById[id].progress = progress;
     },
   },
   actions: {
-    initialize({ state, dispatch, commit }) {
-      const savedRootId = window.localStorage.getItem('rootId');
+    initialize({ commit, dispatch }) {
+      const savedWorkspaces = window.localStorage.getItem('workspaces');
       const savedTasksById = window.localStorage.getItem('tasksById');
-      if (savedRootId && savedTasksById) {
+      const currentWorkspaceId = window.localStorage.getItem('currentWorkspaceId');
+      if (savedWorkspaces && savedTasksById && currentWorkspaceId) {
         commit('loadSavedTasks', {
-          rootId: savedRootId,
+          workspaces: savedWorkspaces,
           tasksById: savedTasksById,
+          currentWorkspaceId,
         });
       } else {
-        const { rootId } = state;
-        dispatch('addTask', { superTaskId: rootId });
+        dispatch('addWorkspace');
       }
+    },
+    addWorkspace({ commit }) {
+      commit('createWorkspace');
+      commit('createFirstWorkspaceTask');
+      commit('saveWorkspaces');
     },
     addTask({ commit }, { prevTaskId, nextTaskId, superTaskId, description }) {
       commit('createTask', description);

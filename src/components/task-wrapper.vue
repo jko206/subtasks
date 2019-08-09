@@ -2,7 +2,7 @@
   <div :class="('task-wrapper', { leaf: isAtomic })" v-if="isShown">
     <div :class="['main-task', `depth-${depth}`]" ref="input-wrapper">
       <FoldToggle
-        v-if="!isAtomic"
+        v-if="!isAtomic && !task.isProject"
         :show="showSubTasks"
         class="fold-toggle"
         @click.native="showSubTasks = !showSubTasks"
@@ -15,13 +15,13 @@
         @keydown.meta.enter="addTask('above')"
         @keydown.tab.exact.prevent="indent($event)"
         @keydown.shift.tab.prevent="unindent($event)"
-        placeholder="Write a task"
+        :placeholder="id"
         @keydown.up.exact="focusPrevTask"
         @keydown.down.exact="focusNextTask"
         @keydown.delete.exact="deleteTask"
       />
     </div>
-    <div class="sub-tasks" v-if="showSubTasks">
+    <div class="sub-tasks" v-if="showSubTasks && !task.isProject">
       <TaskWrapper
         v-for="childId in task.subTaskIds"
         :id="childId"
