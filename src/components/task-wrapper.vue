@@ -15,7 +15,7 @@
         @keydown.meta.enter="addTask('above')"
         @keydown.tab.exact.prevent="indent($event)"
         @keydown.shift.tab.prevent="unindent($event)"
-        :placeholder="id"
+        placeholder="Write a task"
         @keydown.up.exact="focusPrevTask"
         @keydown.down.exact="focusNextTask"
         @keydown.delete.exact="deleteTask"

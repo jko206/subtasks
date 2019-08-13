@@ -14,7 +14,6 @@ export default {
     createWorkspace(state) {
       const task = getEmptyTask();
       Vue.set(state.tasksById, task.id, task);
-      // state.workspaceIds.push(task.id);
       Vue.set(state.workspaceIds, state.workspaceIds.length, task.id);
     },
     createFirstWorkspaceTask(state) {
@@ -38,8 +37,8 @@ export default {
     },
 
     saveWorkspaces(state) {
-      // window.localStorage.setItem('workspaceIds', JSON.stringify(state.workspaceIds));
-      // window.localStorage.setItem('currentWorkspaceId', JSON.stringify(state.currentWorkspaceId));
+      window.localStorage.setItem('workspaceIds', JSON.stringify(state.workspaceIds));
+      window.localStorage.setItem('currentWorkspaceId', JSON.stringify(state.currentWorkspaceId));
     },
 
     updateTask(state, { id, prop, value }) {
@@ -126,13 +125,14 @@ export default {
       state.detachedTask = null;
       delete state.tasksById[id];
     },
-    loadSavedTasks(state, { rootId, tasksById }) {
-      state.rootId = rootId;
+    loadSavedTasks(state, { workspaceIds, tasksById, currentWorkspaceId }) {
+      state.workspaceIds = workspaceIds;
       state.tasksById = JSON.parse(tasksById);
+      state.currentWorkspaceId = currentWorkspaceId;
     },
     saveTasks({ rootId, tasksById }) {
-      // window.localStorage.setItem('rootId', rootId);
-      // window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
+      window.localStorage.setItem('rootId', rootId);
+      window.localStorage.setItem('tasksById', JSON.stringify(tasksById));
     },
     updateTaskProgress(state, { id, progress }) {
       state.tasksById[id].progress = progress;
@@ -140,14 +140,14 @@ export default {
   },
   actions: {
     initialize({ commit, dispatch }) {
-      const savedWorkspaces = window.localStorage.getItem('workspaces');
+      const savedWorkspaces = window.localStorage.getItem('workspaceIds');
       const savedTasksById = window.localStorage.getItem('tasksById');
       const currentWorkspaceId = window.localStorage.getItem('currentWorkspaceId');
       if (savedWorkspaces && savedTasksById && currentWorkspaceId) {
         commit('loadSavedTasks', {
-          workspaces: savedWorkspaces,
+          workspaceIds: JSON.parse(savedWorkspaces),
           tasksById: savedTasksById,
-          currentWorkspaceId,
+          currentWorkspaceId: JSON.parse(currentWorkspaceId),
         });
       } else {
         dispatch('addWorkspace');
