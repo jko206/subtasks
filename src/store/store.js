@@ -1,5 +1,6 @@
 import '@/functions/array';
 import { getEmptyTask } from '@/functions/tasks';
+import Vue from 'vue';
 
 export default {
   state: {
@@ -12,12 +13,13 @@ export default {
   mutations: {
     createWorkspace(state) {
       const task = getEmptyTask();
-      state.tasksById[task.id] = task;
-      state.workspaceIds.push(task.id);
+      Vue.set(state.tasksById, task.id, task);
+      // state.workspaceIds.push(task.id);
+      Vue.set(state.workspaceIds, state.workspaceIds.length, task.id);
     },
     createFirstWorkspaceTask(state) {
       const task = getEmptyTask();
-      state.tasksById[task.id] = task;
+      Vue.set(state.tasksById, task.id, task);
 
       const lastAddedWorkspaceId = state.workspaceIds.last();
       const lastAddedWorkspace = state.tasksById[lastAddedWorkspaceId];
@@ -27,7 +29,7 @@ export default {
     },
     createTask(state, description) {
       const task = getEmptyTask({ description });
-      state.tasksById[task.id] = task;
+      Vue.set(state.tasksById, task.id, task);
       state.detachedTask = task;
     },
 
