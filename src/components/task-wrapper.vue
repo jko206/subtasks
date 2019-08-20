@@ -170,7 +170,9 @@ export default {
       this.$refs['input-wrapper'].querySelector('input').focus();
     },
     deleteTask() {
-      if (this.task.description) return;
+      const { workspaceIds } = this.$store.state;
+      const { superTaskId } = this;
+      if (this.task.description || workspaceIds.includes(superTaskId)) return;
       let confirmDelete = true;
       if (this.task.subTaskIds.length) {
         confirmDelete = confirm('SubTasks will be deleted.');
