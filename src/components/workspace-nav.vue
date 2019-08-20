@@ -1,7 +1,7 @@
 <template>
   <div class="workspace-nav">
     <WorkspaceNavItem v-for="id in workspaceIds" :key="id" :id="id" />
-    <div class="workspace-name empty" @click="addWorkspace">
+    <div class="workspace-name empty add-workspace" @click="addWorkspace">
       + Workspace
     </div>
   </div>
@@ -14,7 +14,7 @@ export default {
   name: 'WorkspaceNav',
   components: { WorkspaceNavItem },
   computed: {
-    ...mapState(['tasksById', 'workspaceIds']),
+    ...mapState(['workspaceIds']),
   },
   methods: {
     ...mapActions(['addWorkspace']),
