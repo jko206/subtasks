@@ -114,8 +114,8 @@ export default {
 
       state.detachedTask = null;
     },
-    editTask(state, { id, description, progress }) {
-      if (description !== undefined) state.tasksById[id].description = description;
+    editTask(state, { id, title, progress }) {
+      if (title !== undefined) state.tasksById[id].title = title;
       if (progress !== undefined) state.tasksById[id].progress = progress;
     },
     focusTask(state, id) {
@@ -166,9 +166,9 @@ export default {
 
       commit('saveTasks');
     },
-    editTask({ commit }, { id, description, progress }) {
-      if (description !== undefined) {
-        commit('editTask', { id, description });
+    editTask({ commit }, { id, title, progress }) {
+      if (title !== undefined) {
+        commit('editTask', { id, title });
       }
 
       if (progress !== undefined) {
