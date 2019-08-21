@@ -65,11 +65,15 @@ export default {
   methods: {
     changeWorkspaceName(name) {
       this.$refs['workspace-name-input'].blur();
+      console.log(name);
       this.$store.commit('updateTask', {
         id: this.id,
         prop: 'title',
         value: name,
       });
+
+      this.$store.commit('saveWorkspaces');
+      this.$store.commit('saveTasks');
     },
     changeWorkspace() {
       this.$store.commit('setCurrentWorkspaceId', this.id);
