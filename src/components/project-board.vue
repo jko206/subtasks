@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import TaskWrapper from './task-wrapper.vue';
+import TaskWrapper from './task-wrapper.vue'
 
 export default {
   name: 'ProjectBoard',
@@ -18,11 +18,10 @@ export default {
   },
   computed: {
     subTaskIds() {
-      return this.$store.state.tasksById[this.id].subTaskIds;
+      return this.$store.state.tasksById[this.id].subTaskIds
     },
   },
-};
+}
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

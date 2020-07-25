@@ -12,30 +12,30 @@
         v-model="workingTitle"
         @keydown.enter.exact="updateItem()"
         @keydown.enter.meta.shift="
-          addTask('above');
-          updateItem();
+          addTask('above')
+          updateItem()
         "
         @keydown.meta.enter.exact="
-          addTask('below');
-          updateItem();
+          addTask('below')
+          updateItem()
         "
         @keydown.tab.exact.prevent="
-          indent($event);
-          updateItem();
+          indent($event)
+          updateItem()
         "
         @keydown.shift.tab.prevent="
-          unindent($event);
-          updateItem();
+          unindent($event)
+          updateItem()
         "
         placeholder="Write a task"
         @keydown.esc.exact="workingTitle = title"
         @keydown.up.exact="
-          focusPrevTask;
-          updateItem();
+          focusPrevTask
+          updateItem()
         "
         @keydown.down.exact="
-          focusNextTask;
-          updateItem();
+          focusNextTask
+          updateItem()
         "
         @keydown.delete.exact="deleteTask"
       />
@@ -52,19 +52,19 @@
 </template>
 
 <script>
-import ProgressIndicator from './progress-indicator.vue';
-import FoldToggle from './fold-toggle.vue';
-import { mapState } from 'vuex';
+import ProgressIndicator from './progress-indicator.vue'
+import FoldToggle from './fold-toggle.vue'
+import { mapState } from 'vuex'
 
 function getLastDescendant(taskId, tasksById) {
-  const { subTaskIds } = tasksById[taskId];
-  return subTaskIds.length ? getLastDescendant(subTaskIds.last(), tasksById) : taskId;
+  const { subTaskIds } = tasksById[taskId]
+  return subTaskIds.length ? getLastDescendant(subTaskIds.last(), tasksById) : taskId
 }
 
 function getClosestNextTask(taskId, tasksById) {
-  if (tasksById[taskId].isRoot) return;
-  const { nextTaskId, superTaskId } = tasksById[taskId];
-  return nextTaskId || (superTaskId && getClosestNextTask(superTaskId, tasksById));
+  if (tasksById[taskId].isRoot) return
+  const { nextTaskId, superTaskId } = tasksById[taskId]
+  return nextTaskId || (superTaskId && getClosestNextTask(superTaskId, tasksById))
 }
 
 export default {
@@ -85,14 +85,14 @@ export default {
     return {
       showSubTasks: true,
       workingTitle: '',
-    };
+    }
   },
   created() {
-    this.workingTitle = this.title;
+    this.workingTitle = this.title
   },
   watch: {
     title() {
-      this.workingTitle = this.title;
+      this.workingTitle = this.title
     },
   },
   computed: {
@@ -104,119 +104,119 @@ export default {
     ]),
     ...mapState(['tasksById', 'focusedTaskId']),
     task() {
-      return this.tasksById[this.id];
+      return this.tasksById[this.id]
     },
     title() {
-      return this.task.title;
+      return this.task.title
     },
     progressEnum() {
-      const { progress } = this.task;
-      return ['not_started', 'completed'][progress] || 'in-progress';
+      const { progress } = this.task
+      return ['not_started', 'completed'][progress] || 'in-progress'
     },
     isFocused() {
-      return this.focusedTaskId === this.id;
+      return this.focusedTaskId === this.id
     },
     isAtomic() {
-      return !this.task.subTaskIds.length;
+      return !this.task.subTaskIds.length
     },
     isShown() {
-      const progress = this.progressEnum;
+      const progress = this.progressEnum
       return (
         !this.isAtomic ||
-        ((this.showNotStartedTasks && progress === 'not_started') ||
-          (this.showCompletedTasks && progress === 'completed') ||
-          (this.showInProgressTasks && progress === 'in_progress'))
-      );
+        (this.showNotStartedTasks && progress === 'not_started') ||
+        (this.showCompletedTasks && progress === 'completed') ||
+        (this.showInProgressTasks && progress === 'in_progress')
+      )
     },
     isRoot() {
-      const { superTaskId } = this.task;
-      return this.$store.state.workspaceIds.includes(superTaskId);
+      const { superTaskId } = this.task
+      return this.$store.state.workspaceIds.includes(superTaskId)
     },
   },
   watch: {
     isFocused() {
-      if (this.isFocused) this.focusInput();
+      if (this.isFocused) this.focusInput()
     },
   },
   mounted() {
-    this.focusInput();
+    this.focusInput()
   },
   methods: {
     addTask(position) {
       this.$store.dispatch('addTask', {
         [position === 'below' ? 'prevTaskId' : 'nextTaskId']: this.id,
-      });
+      })
     },
     updateItem() {
-      const { id } = this;
+      const { id } = this
       this.$store.dispatch('editTask', {
         id,
         title: this.workingTitle,
-      });
+      })
     },
     updateProgress() {
-      const { id } = this;
-      const { progress, superTaskId } = this.task;
-      const newProgress = progress < 1 ? 1 : 0;
+      const { id } = this
+      const { progress, superTaskId } = this.task
+      const newProgress = progress < 1 ? 1 : 0
       if (this.task.subTaskIds.length) {
         this.$store.dispatch('markSubTasksAsDone', {
           id,
           progress: newProgress,
-        });
+        })
       } else {
-        const { progress } = this.task;
-        this.task.progress = progress === 1 ? 0 : progress === 0 ? 0.5 : 1;
+        const { progress } = this.task
+        this.task.progress = progress === 1 ? 0 : progress === 0 ? 0.5 : 1
       }
-      this.$store.dispatch('updateSuperTaskProgress', superTaskId);
-      this.$store.commit('saveTasks');
+      this.$store.dispatch('updateSuperTaskProgress', superTaskId)
+      this.$store.commit('saveTasks')
     },
     indent() {
-      const { id, prevTaskId } = this.task;
+      const { id, prevTaskId } = this.task
       if (prevTaskId) {
         this.$store.dispatch('makeSubTask', {
           id,
           superTaskId: prevTaskId,
-        });
+        })
       }
     },
     unindent() {
-      const { superTaskId, id } = this.task;
+      const { superTaskId, id } = this.task
       if (!this.isRoot) {
         this.$store.dispatch('makeNextTask', {
           id,
           prevTaskId: superTaskId,
-        });
+        })
       }
     },
     focusPrevTask() {
-      const { superTaskId, prevTaskId } = this.task;
-      const { tasksById } = this.$store.state;
+      const { superTaskId, prevTaskId } = this.task
+      const { tasksById } = this.$store.state
 
-      const toFocusId = (prevTaskId && getLastDescendant(prevTaskId, tasksById)) || superTaskId;
-      this.$store.commit('focusTask', toFocusId);
+      const toFocusId = (prevTaskId && getLastDescendant(prevTaskId, tasksById)) || superTaskId
+      this.$store.commit('focusTask', toFocusId)
     },
     focusNextTask() {
-      const { tasksById } = this.$store.state;
-      const toFocusId = this.task.subTaskIds[0] || getClosestNextTask(this.id, tasksById);
-      this.$store.commit('focusTask', toFocusId);
+      const { tasksById } = this.$store.state
+      const toFocusId = this.task.subTaskIds[0] || getClosestNextTask(this.id, tasksById)
+      this.$store.commit('focusTask', toFocusId)
     },
     focusInput() {
-      this.$refs['input-wrapper'].querySelector('input').focus();
+      this.$refs['input-wrapper'].querySelector('input').focus()
     },
     deleteTask() {
-      const { workspaceIds } = this.$store.state;
-      const { superTaskId, isRoot, task } = this;
-      if (this.workingTitle || (isRoot && !task.prevTaskId && !task.nextTaskId)) return;
-      let confirmDelete = true;
+      const { workspaceIds } = this.$store.state
+      const { superTaskId, isRoot, task } = this
+      if (this.workingTitle || (isRoot && !task.prevTaskId && !task.nextTaskId)) return
+      let confirmDelete = true
       if (this.task.subTaskIds.length) {
-        confirmDelete = confirm('SubTasks will be deleted.');
+        confirmDelete = confirm('SubTasks will be deleted.')
       }
       if (confirmDelete) {
-        this.$store.dispatch('removeTask', this.id);
+        this.$store.dispatch('removeTask', this.id)
       }
     },
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>

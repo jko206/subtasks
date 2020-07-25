@@ -11,16 +11,16 @@ export default {
     value: {
       type: Number,
       required: true,
-      validator: n => n >= 0 && n <= 1,
+      validator: (n) => n >= 0 && n <= 1,
     },
   },
   computed: {
     borderColorClass() {
-      const borderColor = this.value === 1 ? 'green' : this.value === 0 ? 'gray' : 'orange';
-      return `${borderColor}-checkmark`;
+      const borderColor = this.value === 1 ? 'green' : this.value === 0 ? 'gray' : 'orange'
+      return `${borderColor}-checkmark`
     },
   },
-};
+}
 </script>
 <style lang="scss" scoped>
 .progress-indicator {

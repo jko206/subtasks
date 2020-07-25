@@ -1,4 +1,4 @@
-import uuid from '@/functions/uuid';
+import uuid from '@/functions/uuid'
 
 export function getEmptyTask(seed) {
   return {
@@ -13,5 +13,5 @@ export function getEmptyTask(seed) {
     progress: 0,
     showSubtasks: false,
     ...seed,
-  };
+  }
 }

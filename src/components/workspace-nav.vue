@@ -8,8 +8,8 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
-import WorkspaceNavItem from './workspace-nav-item.vue';
+import { mapState, mapActions } from 'vuex'
+import WorkspaceNavItem from './workspace-nav-item.vue'
 export default {
   name: 'WorkspaceNav',
   components: { WorkspaceNavItem },
@@ -19,7 +19,7 @@ export default {
   methods: {
     ...mapActions(['addWorkspace']),
   },
-};
+}
 </script>
 
 <style scoped lang="scss">

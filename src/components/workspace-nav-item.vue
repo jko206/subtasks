@@ -13,8 +13,8 @@
       placeholder="Workspace name"
       class="workspace-name-input"
       @blur="
-        cancelNameChange;
-        isFocused = false;
+        cancelNameChange
+        isFocused = false
       "
       v-model="workingWorkspaceName"
       :disabled="isDisabled"
@@ -35,7 +35,7 @@ export default {
       workingWorkspaceName: null,
       timeoutEvent: null,
       isFocused: false,
-    };
+    }
   },
   props: {
     id: {
@@ -44,62 +44,61 @@ export default {
     },
   },
   created() {
-    this.workingWorkspaceName = this.workspaceName;
+    this.workingWorkspaceName = this.workspaceName
   },
   watch: {
     workspaceName() {
-      this.workingWorkspaceName = this.workspaceName;
+      this.workingWorkspaceName = this.workspaceName
     },
     isFocused() {
-      if (this.isFocused) this.$refs['workspace-name-input'].focus();
+      if (this.isFocused) this.$refs['workspace-name-input'].focus()
     },
   },
   computed: {
     isCurrent() {
-      return this.id === this.$store.state.currentWorkspaceId;
+      return this.id === this.$store.state.currentWorkspaceId
     },
     workspaceName() {
-      return this.$store.state.tasksById[this.id].title;
+      return this.$store.state.tasksById[this.id].title
     },
   },
   methods: {
     changeWorkspaceName(name) {
-      this.$refs['workspace-name-input'].blur();
-      console.log(name);
+      this.$refs['workspace-name-input'].blur()
+      console.log(name)
       this.$store.commit('updateTask', {
         id: this.id,
         prop: 'title',
         value: name,
-      });
+      })
 
-      this.$store.commit('saveWorkspaces');
-      this.$store.commit('saveTasks');
+      this.$store.commit('saveWorkspaces')
+      this.$store.commit('saveTasks')
     },
     changeWorkspace() {
-      this.$store.commit('setCurrentWorkspaceId', this.id);
+      this.$store.commit('setCurrentWorkspaceId', this.id)
     },
     cancelNameChange() {
-      this.isDisabled = true;
-      this.workingWorkspaceName = this.workspaceName;
+      this.isDisabled = true
+      this.workingWorkspaceName = this.workspaceName
     },
     handleClick() {
       if (this.isClicked) {
-        this.isDisabled = false;
+        this.isDisabled = false
         this.$nextTick(() => {
-          this.isFocused = true;
-        });
+          this.isFocused = true
+        })
       } else {
-        this.isClicked = true;
-        this.changeWorkspace();
+        this.isClicked = true
+        this.changeWorkspace()
         this.timeoutEvent = setTimeout(() => {
-          this.isClicked = false;
-        }, 300);
+          this.isClicked = false
+        }, 300)
       }
     },
   },
-};
+}
 </script>
-
 
 <style scoped lang="scss">
 .workspace-name {
