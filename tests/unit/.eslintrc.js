@@ -1,5 +1,10 @@
 module.exports = {
   env: {
-    jest: true
-  }
+    jest: true,
+  },
+  eslintConfig: {
+    rules: {
+      'no-console': 'off',
+    },
+  },
 }
