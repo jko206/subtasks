@@ -23,7 +23,7 @@
           indent($event)
           updateItem()
         "
-        @keydown.shift.tab.prevent="
+        @keydown.shift.tab.prevent.exact="
           unindent($event)
           updateItem()
         "
@@ -91,6 +91,9 @@ export default {
     this.workingTitle = this.title
   },
   watch: {
+    isFocused() {
+      if (this.isFocused) this.focusInput()
+    },
     title() {
       this.workingTitle = this.title
     },
@@ -131,11 +134,6 @@ export default {
     isRoot() {
       const { superTaskId } = this.task
       return this.$store.state.workspaceIds.includes(superTaskId)
-    },
-  },
-  watch: {
-    isFocused() {
-      if (this.isFocused) this.focusInput()
     },
   },
   mounted() {
@@ -204,8 +202,8 @@ export default {
       this.$refs['input-wrapper'].querySelector('input').focus()
     },
     deleteTask() {
-      const { workspaceIds } = this.$store.state
-      const { superTaskId, isRoot, task } = this
+      // const { workspaceIds } = this.$store.state
+      const { isRoot, task } = this
       if (this.workingTitle || (isRoot && !task.prevTaskId && !task.nextTaskId)) return
       let confirmDelete = true
       if (this.task.subTaskIds.length) {
