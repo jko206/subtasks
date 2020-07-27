@@ -2,12 +2,12 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import taskFilters from './task-filters'
 import '@/utility/array'
-import mutations from "mutations";
-import actions from "actions";
+import mutations from './mutations'
+import actions from './actions'
 
 Vue.use(Vuex)
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     workspaceIds: [], // IDs of workspaces
     tasksById: {},
@@ -21,3 +21,7 @@ export default new Vuex.Store({
   mutations,
   actions,
 })
+
+window.$store = store
+
+export default store
