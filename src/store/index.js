@@ -1,13 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import filters from './modules/filters'
-import storeRoot from './store'
+import taskFilters from './task-filters'
+import '@/utility/array'
+import mutations from "mutations";
+import actions from "actions";
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  modules: {
-    filters,
+  state: {
+    workspaceIds: [], // IDs of workspaces
+    tasksById: {},
+    detachedTask: null,
+    focusedTaskId: null,
+    currentWorkspaceId: null,
   },
-  ...storeRoot,
+  modules: {
+    taskFilters,
+  },
+  mutations,
+  actions,
 })
