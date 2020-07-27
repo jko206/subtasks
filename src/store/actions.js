@@ -87,7 +87,7 @@ export default {
     const { subTaskIds, superTaskId } = state.tasksById[id]
     const total = subTaskIds.length
     let progress = subTaskIds
-      .map((subTaskId) => state.tasksById[subTaskId])
+      .map(subTaskId => state.tasksById[subTaskId])
       .reduce((subTotal, task) => subTotal + task.progress, 0)
 
     progress /= total
@@ -95,4 +95,4 @@ export default {
 
     if (superTaskId) dispatch('updateSuperTaskProgress', superTaskId)
   },
-},
+}
