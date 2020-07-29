@@ -2,10 +2,12 @@ import { getEmptyTask } from '@/utility/tasks'
 import Vue from 'vue'
 
 export default {
-  createWorkspace(state) {
-    const task = getEmptyTask()
+  addTask(state, task) {
     Vue.set(state.tasksById, task.id, task)
-    Vue.set(state.workspaceIds, state.workspaceIds.length, task.id)
+  },
+  addWorkspace(state, task) {
+    Vue.set(state.tasksById, task.id, task)
+    Vue.set(state.workspaceIds, state.workspaceIds.length - 1, state.workspaceIds)
   },
   createFirstWorkspaceTask(state) {
     const task = getEmptyTask()
@@ -22,20 +24,11 @@ export default {
     Vue.set(state.tasksById, task.id, task)
     state.detachedTask = task
   },
-
-  setCurrentWorkspaceId(state, id) {
-    state.currentWorkspaceId = id
+  createWorkspace(state) {
+    const task = getEmptyTask()
+    Vue.set(state.tasksById, task.id, task)
+    Vue.set(state.workspaceIds, state.workspaceIds.length, task.id)
   },
-
-  saveWorkspaces(state) {
-    window.localStorage.setItem('workspaceIds', JSON.stringify(state.workspaceIds))
-    window.localStorage.setItem('currentWorkspaceId', JSON.stringify(state.currentWorkspaceId))
-  },
-
-  updateTask(state, { id, prop, value }) {
-    state.tasksById[id][prop] = value
-  },
-
   detachTask(state, id) {
     const task = state.tasksById[id]
 
@@ -56,23 +49,24 @@ export default {
 
     state.detachedTask = task
   },
-  // put the detached task before some task
-  makePrevTask(state, nextTaskId) {
+  editTask(state, { id, title, progress }) {
+    if (title !== undefined) state.tasksById[id].title = title
+    if (progress !== undefined) state.tasksById[id].progress = progress
+  },
+  focusTask(state, id) {
+    state.focusedTaskId = id
+  },
+  loadSavedTasks(state, { workspaceIds, tasksById, currentWorkspaceId }) {
+    state.workspaceIds = workspaceIds
+    state.tasksById = JSON.parse(tasksById)
+    state.currentWorkspaceId = currentWorkspaceId
+  },
+  makeFirstSubTask(state, superTaskId) {
     const task = state.detachedTask
-    const nextTask = state.tasksById[nextTaskId]
-    const superTask = state.tasksById[nextTask.superTaskId]
+    const superTask = state.tasksById[superTaskId]
 
-    if (nextTask.prevTaskId) {
-      const prevTask = state.tasksById[nextTask.prevTaskId]
-      prevTask.nextTaskId = task.id
-      task.prevTaskId = prevTask.id
-    }
-
-    nextTask.prevTaskId = task.id
-    task.nextTaskId = nextTaskId
-
-    superTask.subTaskIds.insertBefore(nextTaskId, task.id)
-    task.superTaskId = nextTask.superTaskId
+    task.superTaskId = superTaskId
+    superTask.subTaskIds.push(task.id)
 
     state.detachedTask = null
   },
@@ -96,34 +90,43 @@ export default {
 
     state.detachedTask = null
   },
-  makeFirstSubTask(state, superTaskId) {
+  // put the detached task before some task
+  makePrevTask(state, nextTaskId) {
     const task = state.detachedTask
-    const superTask = state.tasksById[superTaskId]
+    const nextTask = state.tasksById[nextTaskId]
+    const superTask = state.tasksById[nextTask.superTaskId]
 
-    task.superTaskId = superTaskId
-    superTask.subTaskIds.push(task.id)
+    if (nextTask.prevTaskId) {
+      const prevTask = state.tasksById[nextTask.prevTaskId]
+      prevTask.nextTaskId = task.id
+      task.prevTaskId = prevTask.id
+    }
+
+    nextTask.prevTaskId = task.id
+    task.nextTaskId = nextTaskId
+
+    superTask.subTaskIds.insertBefore(nextTaskId, task.id)
+    task.superTaskId = nextTask.superTaskId
 
     state.detachedTask = null
-  },
-  editTask(state, { id, title, progress }) {
-    if (title !== undefined) state.tasksById[id].title = title
-    if (progress !== undefined) state.tasksById[id].progress = progress
-  },
-  focusTask(state, id) {
-    state.focusedTaskId = id
   },
   purgeTask(state, id) {
     state.detachedTask = null
     delete state.tasksById[id]
   },
-  loadSavedTasks(state, { workspaceIds, tasksById, currentWorkspaceId }) {
-    state.workspaceIds = workspaceIds
-    state.tasksById = JSON.parse(tasksById)
-    state.currentWorkspaceId = currentWorkspaceId
-  },
   saveTasks({ rootId, tasksById }) {
     window.localStorage.setItem('rootId', rootId)
     window.localStorage.setItem('tasksById', JSON.stringify(tasksById))
+  },
+  saveWorkspaces(state) {
+    window.localStorage.setItem('workspaceIds', JSON.stringify(state.workspaceIds))
+    window.localStorage.setItem('currentWorkspaceId', JSON.stringify(state.currentWorkspaceId))
+  },
+  setCurrentWorkspaceId(state, id) {
+    state.currentWorkspaceId = id
+  },
+  updateTask(state, { id, prop, value }) {
+    state.tasksById[id][prop] = value
   },
   updateTaskProgress(state, { id, progress }) {
     state.tasksById[id].progress = progress
