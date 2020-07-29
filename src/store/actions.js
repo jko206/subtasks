@@ -3,15 +3,17 @@ import { connectTasksVertically, getEmptyTask } from '../utility/tasks'
 
 export default {
   initialize({ commit, dispatch }) {
-    const savedWorkspaces = window.localStorage.getItem('workspaceIds')
-    const savedTasksById = window.localStorage.getItem('tasksById')
-    const currentWorkspaceId = window.localStorage.getItem('currentWorkspaceId')
-    if (savedWorkspaces && savedTasksById && currentWorkspaceId) {
-      commit('loadSavedTasks', {
-        workspaceIds: JSON.parse(savedWorkspaces),
-        tasksById: savedTasksById,
-        currentWorkspaceId: JSON.parse(currentWorkspaceId),
-      })
+    const savedWorkspaces = loadFromLocalStorage('workspaceIds')
+    if (savedWorkspaces) {
+      const savedTasksById = loadFromLocalStorage('tasksById')
+      const currentWorkspaceId = loadFromLocalStorage('currentWorkspaceId')
+      if (savedTasksById && currentWorkspaceId) {
+        commit('loadSavedTasks', {
+          workspaceIds: JSON.parse(savedWorkspaces),
+          tasksById: savedTasksById,
+          currentWorkspaceId: JSON.parse(currentWorkspaceId),
+        })
+      }
     } else {
       dispatch('addWorkspace')
     }
