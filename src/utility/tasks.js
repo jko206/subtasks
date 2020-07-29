@@ -1,17 +1,26 @@
 import uuid from '@/functions/uuid'
+import Vue from 'vue'
 
-export function getEmptyTask(seed) {
+export const getEmptyTask = () => {
   return {
+    description: '',
     id: uuid(),
     isProject: false,
-    superTaskId: null,
-    subTaskIds: [],
-    prevTaskId: null,
     nextTaskId: null,
-    title: '',
-    description: '',
+    prevTaskId: null,
     progress: 0,
     showSubtasks: false,
-    ...seed,
+    subTaskIds: [],
+    superTaskId: null,
+    title: '',
+    type: 'task', // 'task' | 'project' | 'workspace'
   }
+}
+
+export const connectTasksVertically = (task, subTask) => {
+  const taskId = task.id
+  const subTaskId = subTask.id
+
+  Vue.set(task.subTaskIds, task.subTaskIds.length - 1, subTaskId)
+  Vue.set(subTask, 'superTaskId', taskId)
 }
