@@ -1,3 +1,6 @@
+import { saveToLocalStorage, loadFromLocalStorage } from '../utility/data-storage'
+import { connectTasksVertically, getEmptyTask } from '../utility/tasks'
+
 export default {
   initialize({ commit, dispatch }) {
     const savedWorkspaces = window.localStorage.getItem('workspaceIds')
@@ -13,10 +16,18 @@ export default {
       dispatch('addWorkspace')
     }
   },
-  addWorkspace({ commit }) {
-    commit('createWorkspace')
-    commit('createFirstWorkspaceTask')
-    commit('saveWorkspaces')
+  // low level action
+  addWorkspace({ state, commit }) {
+    const workspace = {
+      ...getEmptyTask(),
+      type: 'workspace',
+    }
+    const task = getEmptyTask()
+    connectTasksVertically(workspace, task)
+    commit('addWorkspace', workspace)
+    commit('addTask', task)
+
+    saveToLocalStorage('state', state)
   },
   addTask({ commit }, { prevTaskId, nextTaskId, superTaskId, description }) {
     commit('createTask', description)
