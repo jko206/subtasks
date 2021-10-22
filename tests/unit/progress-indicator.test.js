@@ -1,5 +1,5 @@
 import { shallowMount } from '@vue/test-utils'
-import ProgressIndicator from '@/components/progress-indicator.vue'
+import ProgressIndicator from '../../src/components/progress-indicator.vue'
 
 describe('progress-indicator.vue', () => {
   it('Checkmark is gray when progress is 0', () => {

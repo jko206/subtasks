@@ -1,4 +1,4 @@
-import uuid from '@/functions/uuid'
+import uuid from './uuid'
 import Vue from 'vue'
 
 export const getEmptyTask = () => {

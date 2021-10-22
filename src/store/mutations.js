@@ -1,4 +1,4 @@
-import { getEmptyTask } from '@/utility/tasks'
+import { getEmptyTask } from '../utility/tasks'
 import Vue from 'vue'
 
 export default {
